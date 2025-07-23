@@ -3,7 +3,7 @@ name: CI - Test & Build Docker
 on:
   push:
     branches:
-      - ci/from-cat
+      - main
 
 jobs:
   build-test:
