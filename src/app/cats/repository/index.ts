@@ -1,0 +1,1 @@
+export { CatsRepository } from './cat.repository'
