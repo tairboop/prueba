@@ -46,13 +46,14 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
-        
+
       - name: Wait for PostgreSQL
         run: |
           until pg_isready -h localhost -p 5432 -U postgres; do
             echo "Waiting for postgres..."
             sleep 2
           done
+          echo "Postgres is ready!"
       
       - name: Set environment variables from .env
         run: |
@@ -61,8 +62,8 @@ jobs:
           echo "PORT=3000" >> $GITHUB_ENV
 
           echo "POSTGRES_HOST=localhost" >> $GITHUB_ENV
-          echo "POSTGRES_PORT=8432" >> $GITHUB_ENV
-          echo "POSTGRES_DB=postgres" >> $GITHUB_ENV
+          echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
+          echo "POSTGRES_DB=test_db" >> $GITHUB_ENV
           echo "POSTGRES_USER=postgres" >> $GITHUB_ENV
           echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
 
