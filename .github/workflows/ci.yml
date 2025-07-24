@@ -23,6 +23,26 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+      
+      - name: Set environment variables from .env
+        run: |
+          echo "PROJECT_NAME=Streamcast" >> $GITHUB_ENV
+          echo "HOST=0.0.0.0" >> $GITHUB_ENV
+          echo "PORT=3000" >> $GITHUB_ENV
+
+          echo "POSTGRES_HOST=localhost" >> $GITHUB_ENV
+          echo "POSTGRES_PORT=8432" >> $GITHUB_ENV
+          echo "POSTGRES_DB=postgres" >> $GITHUB_ENV
+          echo "POSTGRES_USER=postgres" >> $GITHUB_ENV
+          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
+
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
+          echo "JWT_EXPIRATION=3600" >> $GITHUB_ENV
+
+          echo "HLS_HOST=http://localhost" >> $GITHUB_ENV
+          echo "HLS_PORT=8080" >> $GITHUB_ENV
+
+          echo "FRONTEND_URL=http://localhost:3030" >> $GITHUB_ENV
 
       - name: Run unit tests (if present)
         run: pnpm test || echo "No unit tests found, skipping"
@@ -30,14 +50,23 @@ jobs:
       - name: Run e2e tests
         run: pnpm run test:e2e
 
+      - name: Read version from package.json
+        id: version
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          echo "VERSION=v$VERSION" >> $GITHUB_ENV
+
       - name: Docker login
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push image
+      - name: Build and push Docker image with version
         run: |
-          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/streamcast-backend
-          docker build -t $IMAGE:latest .
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/backstm
+          docker build -t $IMAGE:$VERSION .
+          docker tag $IMAGE:$VERSION $IMAGE:latest
+          docker push $IMAGE:$VERSION
           docker push $IMAGE:latest
+
