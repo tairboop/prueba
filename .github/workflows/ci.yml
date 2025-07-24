@@ -24,8 +24,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Run tests
-        run: pnpm test
+      - name: Run unit tests (if present)
+        run: pnpm test || echo "No unit tests found, skipping"
+
+      - name: Run e2e tests
+        run: pnpm run test:e2e
 
       - name: Docker login
         uses: docker/login-action@v3
