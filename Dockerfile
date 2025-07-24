@@ -17,7 +17,6 @@ WORKDIR /app
 
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
-COPY --from=builder /app/.env ./ # si necesitas variables
 
 RUN npm install --omit=dev -g pnpm && pnpm install --prod
 
