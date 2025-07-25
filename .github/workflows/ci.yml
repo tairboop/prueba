@@ -18,7 +18,7 @@ jobs:
           PORT: 3000
 
           POSTGRES_HOST: localhost
-          POSTGRES_PORT: 8432
+          POSTGRES_PORT: 5432
           POSTGRES_DB: test_db
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
