@@ -18,6 +18,6 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/package.json ./package.json
 
-RUN npm install --omit=dev -g pnpm && sed -i '/"prepare"/d' package.json && pnpm install --prod
+RUN npm install --omit=dev -g pnpm  && pnpm install --prod --ignore-scripts
 
 CMD ["node", "dist/main"]
