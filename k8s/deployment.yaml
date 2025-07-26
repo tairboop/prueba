@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: backstm-container
-          image: piitan/backstm:latest
+          image: piitan123/backstm:latest
           ports:
             - containerPort: 3000
           env:
