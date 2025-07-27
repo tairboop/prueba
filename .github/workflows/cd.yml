@@ -56,7 +56,7 @@ jobs:
                       - name: PORT
                         value: "3000"
                       - name: POSTGRES_HOST
-                        value: "localhost"
+                        value: "postgres"
                       - name: POSTGRES_PORT
                         value: "${{ vars.POSTGRES_PORT }}"
                       - name: POSTGRES_DB
