@@ -63,7 +63,7 @@ jobs:
                       - name: POSTGRES_PASSWORD
                         value: "${{ secrets.POSTGRES_PASSWORD }}"
                       
-                        - name: JWT_SECRET
+                      - name: JWT_SECRET
                         value: "secret"
                       - name: JWT_EXPIRATION
                         value: "3600"
