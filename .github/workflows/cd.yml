@@ -21,5 +21,59 @@ jobs:
           mkdir -p ~/.kube
           echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
 
-      - name: Deploy to Kubernetes
-        run: kubectl apply -f k8s/deployment.yaml
+      - name: Deploy to Kubernetes and generate deployment.yaml dynamically
+        run: |
+          cat <<EOF > deployment.yaml
+          apiVersion: apps/v1
+          kind: Deployment
+          metadata:
+            name: backstm-deployment
+            labels:
+              app: backstm
+          spec:
+            replicas: 1
+            selector:
+              matchLabels:
+                app: backstm
+            template:
+              metadata:
+                labels:
+                  app: backstm
+              spec:
+                containers:
+                  - name: backstm-container
+                    image: piitan123/backstm:latest
+                    ports:
+                      - containerPort: 3000
+                    env:
+                      - name: NODE_ENV
+                        value: "production"
+                      - name: HOST
+                        value: "0.0.0.0"
+                      - name: PORT
+                        value: "3000"
+                      - name: POSTGRES_HOST
+                        value: "localhost"
+                      - name: POSTGRES_PORT
+                        value: "${{ vars.POSTGRES_PORT }}"
+                      - name: POSTGRES_DB
+                        value: "test_db"
+                      - name: POSTGRES_USER
+                        value: "postgres"
+                      - name: POSTGRES_PASSWORD
+                        value: "${{ secrets.POSTGRES_PASSWORD }}"
+                      
+                        - name: JWT_SECRET
+                        value: "${{ secrets.JWT_SECRET }}"
+                      - name: JWT_EXPIRATION
+                        value: "3600"
+
+                      - name: HLS_HOST
+                        value: "http://localhost"
+                      - name: HLS_PORT
+                        value: "8080"
+                      - name: FRONTEND_URL
+                        value: "http://localhost:3030"
+          EOF
+
+          kubectl apply -f k8s/deployment.yaml
