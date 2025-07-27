@@ -64,7 +64,7 @@ jobs:
                         value: "${{ secrets.POSTGRES_PASSWORD }}"
                       
                         - name: JWT_SECRET
-                        value: "${{ secrets.JWT_SECRET }}"
+                        value: "secret"
                       - name: JWT_EXPIRATION
                         value: "3600"
 
@@ -76,4 +76,4 @@ jobs:
                         value: "http://localhost:3030"
           EOF
 
-          kubectl apply -f k8s/deployment.yaml
+          kubectl apply -f deployment.yaml
