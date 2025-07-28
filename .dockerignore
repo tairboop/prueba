@@ -1,0 +1,35 @@
+# Ignora dependencias locales
+node_modules
+pnpm-lock.yaml
+
+# Archivos de entorno
+.env
+.env.local
+.env.test
+.env.sample
+
+# Archivos de control de versiones y Git
+.git
+.gitignore
+.husky
+*.log
+
+# Archivos temporales
+dist
+tmp
+temp
+*.swp
+*.swo
+nfs/
+
+# Configuración de editores
+.vscode
+.idea
+
+# Testing
+coverage
+test-results
+
+# Archivos del sistema operativo
+.DS_Store
+Thumbs.db
