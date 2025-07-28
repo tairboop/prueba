@@ -48,7 +48,7 @@ jobs:
                     image: piitan123/backstm:latest
                     ports:
                       - containerPort: 3000
-                    envfrom:
+                    envFrom:
                       - configMapRef:
                           name: backstm-config
                       - secretRef:
