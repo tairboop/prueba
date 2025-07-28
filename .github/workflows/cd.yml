@@ -80,3 +80,23 @@ jobs:
           EOF
 
           kubectl apply -f deployment.yaml
+      - name: Deploy Service
+        run: |
+          cat <<EOF > service.yaml
+          apiVersion: v1
+          kind: Service
+          metadata:
+            name: streamcast-service
+          spec:
+            type: NodePort
+            selector:
+              app: backstm
+            ports:
+              - protocol: TCP
+                port: 3000
+                targetPort: 3000
+                nodePort: 30000
+          EOF
+
+          kubectl apply -f service.yaml
+
