@@ -1,6 +1,6 @@
 # Ignora dependencias locales
 node_modules
-pnpm-lock.yaml
+#pnpm-lock.yaml
 
 # Archivos de entorno
 .env
