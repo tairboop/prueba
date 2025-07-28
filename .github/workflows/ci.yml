@@ -13,22 +13,9 @@ jobs:
       postgres:
         image: postgres:latest
         env:
-          PROJECT_NAME: Streamcast
-          HOST: 0.0.0.0
-          PORT: 3000
-
-          POSTGRES_HOST: localhost
-          POSTGRES_PORT: 5432
           POSTGRES_DB: test_db
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
-
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          JWT_EXPIRATION: 3600
-
-          HLS_HOST: http://localhost
-          HLS_PORT: 8080
-          FRONTEND_URL: http://localhost:3030
         ports:
           - 5432:5432
         options: >-
@@ -38,11 +25,22 @@ jobs:
           --health-retries=5
 
     env:
+      PROJECT_NAME: Streamcast
+      HOST: 0.0.0.0
+      PORT: 3000
+
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
       POSTGRES_DB: test_db
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
+
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      JWT_EXPIRATION: 3600
+
+      HLS_HOST: http://localhost
+      HLS_PORT: 8080
+      FRONTEND_URL: http://localhost:3030
       NODE_ENV: test
 
     steps:
@@ -62,32 +60,11 @@ jobs:
 
       - name: Wait for PostgreSQL
         run: |
-          until pg_isready -h localhost -p 5432 -U postgres; do
+          until pg_isready -h "$POSTGRES_HOST" -p "$POSTGRES_PORT" -U "$POSTGRES_USER"; do
             echo "Waiting for postgres..."
             sleep 2
           done
-          echo "Postgres is ready!"
       
-      - name: Set environment variables from .env
-        run: |
-          echo "PROJECT_NAME=Streamcast" >> $GITHUB_ENV
-          echo "HOST=0.0.0.0" >> $GITHUB_ENV
-          echo "PORT=3000" >> $GITHUB_ENV
-
-          echo "POSTGRES_HOST=localhost" >> $GITHUB_ENV
-          echo "POSTGRES_PORT=5432" >> $GITHUB_ENV
-          echo "POSTGRES_DB=test_db" >> $GITHUB_ENV
-          echo "POSTGRES_USER=postgres" >> $GITHUB_ENV
-          echo "POSTGRES_PASSWORD=${{ secrets.POSTGRES_PASSWORD }}" >> $GITHUB_ENV
-
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
-          echo "JWT_EXPIRATION=3600" >> $GITHUB_ENV
-
-          echo "HLS_HOST=http://localhost" >> $GITHUB_ENV
-          echo "HLS_PORT=8080" >> $GITHUB_ENV
-
-          echo "FRONTEND_URL=http://localhost:3030" >> $GITHUB_ENV
-
       - name: Run unit tests (if present)
         run: pnpm test || echo "No unit tests found, skipping"
 
