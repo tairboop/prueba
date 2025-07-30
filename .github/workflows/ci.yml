@@ -13,7 +13,7 @@ jobs:
       postgres:
         image: postgres:latest
         env:
-          POSTGRES_DB: test_db
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         ports:
@@ -31,7 +31,7 @@ jobs:
 
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
-      POSTGRES_DB: test_db
+      POSTGRES_DB: ${{ vars.POSTGRES_DB }}
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
 
