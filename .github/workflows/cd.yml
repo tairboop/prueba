@@ -46,8 +46,8 @@ jobs:
               spec:
                 containers:
                   - name: backstm-container
-                    image: backstm:latest
-                    imagePullPolicy: Never
+                    image: docker.io/library/backstm:latest
+                    imagePullPolicy: IfNotPresent
                     ports:
                       - containerPort: 3000
                     envFrom:
@@ -58,7 +58,8 @@ jobs:
           EOF
 
           kubectl apply -f deployment.yaml
-          
+          kubectl rollout status deployment/backstm-deployment --timeout=90s
+
       - name: Deploy Service
         run: |
           cat <<EOF > service.yaml
