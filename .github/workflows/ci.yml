@@ -87,19 +87,24 @@ jobs:
 
       - name: Build Docker image
         run: |
-          IMAGE=backstm:$VERSION
-          docker build -t $IMAGE .
-          docker save $IMAGE | gzip > backstm.tar.gz
+          IMAGE_VERSION=backstm:${{ env.VERSION }}
+          IMAGE_LATEST=backstm:latest
+          docker build -t $IMAGE_VERSION -t $IMAGE_LATEST .
+          docker save $IMAGE_VERSION $IMAGE_LATEST | gzip > backstm.tar.gz
 
       - name: Upload Docker image to VPS
         run: |
           scp backstm.tar.gz ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/backstm.tar.gz
       
-      - name: Load image on remote VPS
+      - name: Load and clear image on remote VPS
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
-          gunzip -c /tmp/backstm.tar.gz > /tmp/backstm.tar
-          sudo ctr -n k8s.io images import /tmp/backstm.tar
+            set -e
+            gunzip -c /tmp/backstm.tar.gz > /tmp/backstm.tar
+            sudo ctr -n k8s.io images import /tmp/backstm.tar
+
+            # Mantén solo la última 'latest'
+            sudo ctr -n k8s.io images ls | grep backstm | grep latest | awk '{print \$1}' | grep -v "backstm:latest" | xargs -r sudo ctr -n k8s.io images rm
+
+            sudo ctr -n k8s.io images ls | grep backstm
           EOF
-
-
