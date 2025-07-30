@@ -98,8 +98,8 @@ jobs:
       - name: Load image on remote VPS
         run: |
           ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << EOF
-          docker load < /tmp/backstm.tar.gz
-          docker tag backstm:${{ env.VERSION }} backstm:latest
+          gunzip -c /tmp/backstm.tar.gz > /tmp/backstm.tar
+          sudo ctr -n k8s.io images import /tmp/backstm.tar
           EOF
 
 
