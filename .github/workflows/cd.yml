@@ -1,3 +1,4 @@
+#cd.yml
 name: CD - Deploy to Kubernetes
 
 on:
@@ -45,7 +46,8 @@ jobs:
               spec:
                 containers:
                   - name: backstm-container
-                    image: piitan123/backstm:latest
+                    image: backstm:latest
+                    imagePullPolicy: Never
                     ports:
                       - containerPort: 3000
                     envFrom:
@@ -56,6 +58,7 @@ jobs:
           EOF
 
           kubectl apply -f deployment.yaml
+          
       - name: Deploy Service
         run: |
           cat <<EOF > service.yaml
