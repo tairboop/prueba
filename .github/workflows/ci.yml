@@ -1,4 +1,3 @@
-#ci.yml
 name: CI - Test & Build Docker
 
 on:
@@ -14,7 +13,7 @@ jobs:
       postgres:
         image: postgres:latest
         env:
-          POSTGRES_DB: test_db
+          POSTGRES_DB: ${{ vars.POSTGRES_DB }}
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
         ports:
@@ -32,7 +31,7 @@ jobs:
 
       POSTGRES_HOST: localhost
       POSTGRES_PORT: 5432
-      POSTGRES_DB: test_db
+      POSTGRES_DB: ${{ vars.POSTGRES_DB }}
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${{ secrets.POSTGRES_PASSWORD }}
 
@@ -78,33 +77,17 @@ jobs:
           VERSION=$(jq -r '.version' package.json)
           echo "VERSION=v$VERSION" >> $GITHUB_ENV
 
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.VPS_HOST }} >> ~/.ssh/known_hosts
+      - name: Docker login
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build Docker image
+      - name: Build and push Docker image with version
         run: |
-          IMAGE_VERSION=backstm:${{ env.VERSION }}
-          IMAGE_LATEST=backstm:latest
-          docker build -t $IMAGE_VERSION -t $IMAGE_LATEST .
-          docker save $IMAGE_VERSION $IMAGE_LATEST | gzip > backstm.tar.gz
+          IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/backstm
+          docker build -t $IMAGE:$VERSION .
+          docker tag $IMAGE:$VERSION $IMAGE:latest
+          docker push $IMAGE:$VERSION
+          docker push $IMAGE:latest
 
-      - name: Upload Docker image to VPS
-        run: |
-          scp backstm.tar.gz ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }}:/tmp/backstm.tar.gz
-      
-      - name: Load and clear image on remote VPS
-        run: |
-          ssh ${{ secrets.VPS_USER }}@${{ secrets.VPS_HOST }} << 'EOF'
-            gunzip -c /tmp/backstm.tar.gz > /tmp/backstm.tar
-            
-            # Mantén solo la última 'latest'
-            sudo ctr -n k8s.io images rm docker.io/library/backstm:latest || true
-
-            sudo ctr -n k8s.io images import /tmp/backstm.tar
-            
-            sudo ctr -n k8s.io images ls | grep backstm
-          EOF
