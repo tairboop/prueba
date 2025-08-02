@@ -78,7 +78,9 @@ jobs:
           echo "VERSION=v$VERSION" >> $GITHUB_ENV
 
       - name: Save version artifact
-        run: echo "${VERSION}" > version.txt
+        run: echo "$VERSION" > version.txt
+        env:
+          VERSION: ${{env.VERSION}}
 
       - name: Upload version artifact
         uses: actions/upload-artifact@v4
@@ -96,6 +98,9 @@ jobs:
         run: |
           IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/backstm
           docker build -t $IMAGE:$VERSION .
-          docker tag $IMAGE:$VERSION
+          docker tag $IMAGE:$VERSION $IMAGE:latest
           docker push $IMAGE:$VERSION
+          docker push $IMAGE:latest
+        env:
+          VERSION: ${{ env.VERSION}}
 
