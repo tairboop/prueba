@@ -28,7 +28,7 @@ jobs:
       - name: Download version artifact
         uses: dawidd6/action-download-artifact@v3
         with:
-          workflows: ci.yml
+          workflow: ci.yml
           name: version
           path: .
 
