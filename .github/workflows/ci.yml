@@ -98,9 +98,9 @@ jobs:
         run: |
           IMAGE=${{ secrets.DOCKERHUB_USERNAME }}/backstm
           docker build -t $IMAGE:$VERSION .
-          docker tag $IMAGE:$VERSION $IMAGE:latest
+          docker tag $IMAGE:$VERSION 
           docker push $IMAGE:$VERSION
-          docker push $IMAGE:latest
+        #docker push $IMAGE:latest #$IMAGE:latest
         env:
           VERSION: ${{ env.VERSION}}
 
