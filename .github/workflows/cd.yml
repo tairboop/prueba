@@ -1,3 +1,4 @@
+#cd.yml
 name: CD - Deploy to Kubernetes
 
 on:
@@ -24,6 +25,18 @@ jobs:
           mkdir -p ~/.kube
           echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
 
+      - name: Download version artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: version
+          path: .
+
+      - name: Read version from file txt
+        id: read_version
+        run: |
+          VERSION=$(cat version.txt)
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: Deploy to Kubernetes and generate deployment.yaml dynamically
         run: |
           cat <<EOF > deployment.yaml
@@ -45,7 +58,8 @@ jobs:
               spec:
                 containers:
                   - name: backstm-container
-                    image: piitan123/backstm:latest
+                    image: piitan123/backstm:$VERSION
+                    imagePullPolicy: Always
                     ports:
                       - containerPort: 3000
                     envFrom:
@@ -56,6 +70,17 @@ jobs:
           EOF
 
           kubectl apply -f deployment.yaml
+
+      - name: Wait for rollout to complete
+        run: |
+          set -e
+          kubectl rollout status deployment/backstm-deployment --timeout=100s
+
+      - name: Rollback if failed
+        if: failure()
+        run: |
+          kubectl rollout undo deployment/backstm-deployment
+
       - name: Deploy Service
         run: |
           cat <<EOF > service.yaml
