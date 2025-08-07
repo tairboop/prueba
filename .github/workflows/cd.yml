@@ -33,7 +33,6 @@ jobs:
           path: .
 
       - name: Read version from file txt
-        id: read_version
         run: |
           VERSION=$(cat version.txt)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
