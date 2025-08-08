@@ -2,20 +2,26 @@
 name: CD - Deploy to Kubernetes
 
 on:
-  workflow_run:
-    workflows: ["CI - Test & Build Docker"] 
-    types:
-      - completed
+  push:
+    branches:
+      - main
 
 jobs:
   deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     name: Deploy to Kubernetes
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: executing remote ssh using ssh-key
+        uses: appleboy/ssh-action@v0.1.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY}}
+          port: ${{ secrets.SSH_PORT }}
 
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
