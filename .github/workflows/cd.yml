@@ -15,24 +15,8 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: executing remote ssh using ssh-key
-        uses: appleboy/ssh-action@v0.1.0
-        with:
-          host: ${{ secrets.SSH_HOST }}
-          username: ${{ secrets.SSH_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY}}
-          port: ${{ secrets.SSH_PORT }}
-          script: |
-            kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f /ruta/a/deployment.yaml
-            kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml rollout status deployment/backstm-deployment --timeout=100s
-
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
-
-      - name: Setup kubeconfig
-        run: |
-          mkdir -p ~/.kube
-          echo "${{ secrets.KUBE_CONFIG }}" | base64 -d > ~/.kube/config
 
       - name: Download version artifact
         uses: dawidd6/action-download-artifact@v3
@@ -46,39 +30,46 @@ jobs:
           VERSION=$(cat version.txt)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Deploy to Kubernetes and generate deployment.yaml dynamically
-        run: |
-          cat <<EOF > deployment.yaml
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: backstm-deployment
-            labels:
-              app: backstm
-          spec:
-            replicas: 1
-            selector:
-              matchLabels:
+      - name: Deploy to Kubernetes inside VPS via SSH
+        uses: appleboy/ssh-action@v0.1.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          script: |
+            cat <<EOF > /root/deployment.yaml
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: backstm-deployment
+              labels:
                 app: backstm
-            template:
-              metadata:
-                labels:
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
                   app: backstm
-              spec:
-                containers:
-                  - name: backstm-container
-                    image: piitan123/backstm:$VERSION
-                    imagePullPolicy: Always
-                    ports:
-                      - containerPort: 3000
-                    envFrom:
-                      - configMapRef:
-                          name: backstm-config
-                      - secretRef:
-                          name: backstm-secret
-          EOF
+              template:
+                metadata:
+                  labels:
+                    app: backstm
+                spec:
+                  containers:
+                    - name: backstm-container
+                      image: piitan123/backstm:${VERSION}
+                      imagePullPolicy: Always
+                      ports:
+                        - containerPort: 3000
+                      envFrom:
+                        - configMapRef:
+                            name: backstm-config
+                        - secretRef:
+                            name: backstm-secret
+            EOF
 
-          kubectl apply -f deployment.yaml
+            kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f /root/deployment.yaml
+            kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml rollout status deployment/backstm-deployment --timeout=100s
 
       - name: Wait for rollout to complete
         run: |
