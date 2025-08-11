@@ -15,9 +15,6 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install kubectl
-        uses: azure/setup-kubectl@v3
-
       - name: Download version artifact
         uses: dawidd6/action-download-artifact@v3
         with:
@@ -38,6 +35,9 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            set -e
+            VERSION=${VERSION}
+
             cat <<EOF > /root/deployment.yaml
             apiVersion: apps/v1
             kind: Deployment
@@ -69,35 +69,27 @@ jobs:
             EOF
 
             kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f /root/deployment.yaml
-            kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml rollout status deployment/backstm-deployment --timeout=100s
+            kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml rollout status deployment/backstm-deployment --timeout=100s  || {
+              echo "Rollback..."
+              kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml rollout undo deployment/backstm-deployment
+              exit 1
+            }
 
-      - name: Wait for rollout to complete
-        run: |
-          set -e
-          kubectl rollout status deployment/backstm-deployment --timeout=100s
+            cat <<EOF > service.yaml
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: streamcast-service
+            spec:
+              type: NodePort
+              selector:
+                app: backstm
+              ports:
+                - protocol: TCP
+                  port: 3000
+                  targetPort: 3000
+                  nodePort: 30000
+            EOF
 
-      - name: Rollback if failed
-        if: failure()
-        run: |
-          kubectl rollout undo deployment/backstm-deployment
-
-      - name: Deploy Service
-        run: |
-          cat <<EOF > service.yaml
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: streamcast-service
-          spec:
-            type: NodePort
-            selector:
-              app: backstm
-            ports:
-              - protocol: TCP
-                port: 3000
-                targetPort: 3000
-                nodePort: 30000
-          EOF
-
-          kubectl apply -f service.yaml
+            kubectl apply -f service.yaml
 
