@@ -22,6 +22,9 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY}}
           port: ${{ secrets.SSH_PORT }}
+          script: |
+            kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f /ruta/a/deployment.yaml
+            kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml rollout status deployment/backstm-deployment --timeout=100s
 
       - name: Install kubectl
         uses: azure/setup-kubectl@v3
