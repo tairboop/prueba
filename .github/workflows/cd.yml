@@ -38,56 +38,56 @@ jobs:
             set -e
 
             cat <<EOF > /root/deployment.yaml
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: backstm-deployment
-  labels:
-    app: backstm
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: backstm
-  template:
-    metadata:
-      labels:
-        app: backstm
-    spec:
-      containers:
-        - name: backstm-container
-          image: piitan123/backstm:${VERSION}
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 3000
-          envFrom:
-            - configMapRef:
-                name: backstm-config
-            - secretRef:
-                name: backstm-secret
-EOF
+            apiVersion: apps/v1
+            kind: Deployment
+            metadata:
+              name: backstm-deployment
+              labels:
+                app: backstm
+            spec:
+              replicas: 1
+              selector:
+                matchLabels:
+                  app: backstm
+              template:
+                metadata:
+                  labels:
+                    app: backstm
+                spec:
+                  containers:
+                    - name: backstm-container
+                      image: piitan123/backstm:${VERSION}
+                      imagePullPolicy: Always
+                      ports:
+                        - containerPort: 3000
+                      envFrom:
+                        - configMapRef:
+                            name: backstm-config
+                        - secretRef:
+                            name: backstm-secret
+            EOF
 
-            kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f /root/deployment.yaml
-            kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml rollout status deployment/backstm-deployment --timeout=100s || {
-              echo "Rollback..."
-              kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml rollout undo deployment/backstm-deployment
-              exit 1
-            }
+                        kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f /root/deployment.yaml
+                        kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml rollout status deployment/backstm-deployment --timeout=100s || {
+                          echo "Rollback..."
+                          kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml rollout undo deployment/backstm-deployment
+                          exit 1
+                        }
 
             cat <<EOF > service.yaml
-apiVersion: v1
-kind: Service
-metadata:
-  name: streamcast-service
-spec:
-  type: NodePort
-  selector:
-    app: backstm
-  ports:
-    - protocol: TCP
-      port: 3000
-      targetPort: 3000
-      nodePort: 30000
-EOF
+            apiVersion: v1
+            kind: Service
+            metadata:
+              name: streamcast-service
+            spec:
+              type: NodePort
+              selector:
+                app: backstm
+              ports:
+                - protocol: TCP
+                  port: 3000
+                  targetPort: 3000
+                  nodePort: 30000
+            EOF
 
             kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f service.yaml
