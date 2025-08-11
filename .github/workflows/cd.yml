@@ -1,4 +1,3 @@
-#cd.yml
 name: CD - Deploy to Kubernetes
 
 on:
@@ -34,39 +33,39 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
+          envs: VERSION
           script: |
             set -e
-            VERSION=${VERSION}
 
             cat <<EOF > /root/deployment.yaml
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: backstm-deployment
-            labels:
-              app: backstm
-          spec:
-            replicas: 1
-            selector:
-              matchLabels:
-                app: backstm
-            template:
-              metadata:
-                labels:
-                  app: backstm
-              spec:
-                containers:
-                  - name: backstm-container
-                    image: piitan123/backstm:${VERSION}
-                    imagePullPolicy: Always
-                    ports:
-                      - containerPort: 3000
-                    envFrom:
-                      - configMapRef:
-                          name: backstm-config
-                      - secretRef:
-                          name: backstm-secret
-          EOF
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backstm-deployment
+  labels:
+    app: backstm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: backstm
+  template:
+    metadata:
+      labels:
+        app: backstm
+    spec:
+      containers:
+        - name: backstm-container
+          image: piitan123/backstm:${VERSION}
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: backstm-config
+            - secretRef:
+                name: backstm-secret
+EOF
 
             kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f /root/deployment.yaml
             kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml rollout status deployment/backstm-deployment --timeout=100s || {
@@ -76,19 +75,19 @@ jobs:
             }
 
             cat <<EOF > service.yaml
-          apiVersion: v1
-          kind: Service
-          metadata:
-            name: streamcast-service
-          spec:
-            type: NodePort
-            selector:
-              app: backstm
-            ports:
-              - protocol: TCP
-                port: 3000
-                targetPort: 3000
-                nodePort: 30000
-          EOF
+apiVersion: v1
+kind: Service
+metadata:
+  name: streamcast-service
+spec:
+  type: NodePort
+  selector:
+    app: backstm
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+      nodePort: 30000
+EOF
 
-            kubectl apply -f service.yaml
+            kubectl --kubeconfig /etc/rancher/k3s/k3s.yaml apply -f service.yaml
